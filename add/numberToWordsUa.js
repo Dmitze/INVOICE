@@ -1,23 +1,144 @@
 function onOpen() {
   const ui = SpreadsheetApp.getUi();
-  ui.createMenu('Оновити прописи')
-    .addItem('Додати строку', 'addProductRow')
-    .addItem('Видалити строку', 'deleteProductRow')
-    .addItem('Оновити всі поля', 'updateWordsFieldsDynamic')
+  ui.createMenu('⚙️Меню')
+    .addItem('➤Додати строку', 'addProductRow')
+    .addItem('➤Видалити строку', 'deleteProductRow')
+    .addItem('➤Розрахувати загальну суму', 'updateWordsFieldsDynamic')
     .addToUi();
 }
 
 function onEdit(e) {
-  const sheetName = "A4219";
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName(sheetName);
-  if (!sheet) return;
-  if (!e || !e.range) return;
-  const col = e.range.getColumn();
-  if (sheet.getName() !== sheetName || !((col === 8) || (col === 11))) return;
+  const sheetName = "А4219";
+  const dictSheetName = "Довідник";
+  const mvoSheetName = "МВО";
+  const categoryColumn = 7; // G
+  const itemColumn = 2;     // B
+  const valueColumn = 9;    // I
+  const firstRow = 29;
+  const lastRow = 48;
+  const contactEmail = "nrs.a4219@gmail.com";
+  const PIB_AND_RANK_CELL = "G59";
 
-  updateWordsFieldsDynamic();
+  if (e && e.range && e.range.getSheet().getName() === sheetName) {
+    const range = e.range;
+    const row = range.getRow();
+    const col = range.getColumn();
+    const sheet = e.range.getSheet();
+    if (
+      row >= firstRow &&
+      row <= lastRow &&
+      col === valueColumn
+    ) {
+      const itemName = sheet.getRange(row, itemColumn).getValue();
+      const category = sheet.getRange(row, categoryColumn).getValue();
+      const inputValue = range.getValue();
+      if (!itemName || !category || inputValue === "") return;
+      const dictSheet = e.source.getSheetByName(dictSheetName);
+      const dictData = dictSheet.getRange(2, 1, dictSheet.getLastRow() - 1, 6).getValues();
+      let maxAllowed = null;
+      let categoryLabel = "";
+      let dictColumn = "";
+      for (let i = 0; i < dictData.length; i++) {
+        if (dictData[i][0] === itemName) {
+          if (category === "І") {
+            maxAllowed = dictData[i][4];
+            categoryLabel = "Категорія 1";
+            dictColumn = "E";
+          } else if (category === "ІІ") {
+            maxAllowed = dictData[i][5];
+            categoryLabel = "Категорія 2";
+            dictColumn = "F";
+          }
+          break;
+        }
+      }
+
+      function showError(message) {
+        SpreadsheetApp.getUi().alert(
+          "Шановний\n\n" +
+            message +
+            "\n\nЩо робити: Перевірте правильність вибору категорії й найменування, а також зверніться до відповідального за ведення у таблиці Речовий склад.\n" +
+            `Контакт для звернень: ${contactEmail}\n` +
+            `Деталі: шукалось значення у таблиці Речовий склад!${dictColumn} на майно "${itemName}" та категорії "${categoryLabel}".`
+        );
+      }
+      if (maxAllowed === null || maxAllowed === "" || Number(maxAllowed) === 0) {
+        showError(
+          `${categoryLabel}: значення відсутнє у таблиці для "${itemName}".\n` +
+            "Введення кількості неможливе. Поле буде очищено."
+        );
+        range.setValue("");
+        return;
+      }
+      if (Number(inputValue) > Number(maxAllowed)) {
+        showError(
+          `Ви не можете ввести більше ніж ${maxAllowed} для "${itemName}" (${categoryLabel}).\n` +
+            `Максимально дозволено згідно довідника — ${maxAllowed}. Значення буде автоматично виправлене.`
+        );
+        range.setValue(maxAllowed);
+        return;
+      }
+    }
+    if (col === 8 || col === 11) {
+      if (typeof updateWordsFieldsDynamic === "function") {
+        updateWordsFieldsDynamic();
+      }
+    }
+    const menuRange = sheet.getRange("I24:L25");
+    const longHeight = 131; 
+    const defaultHeight = 21;  
+    const longTextLength = 50; 
+
+    if (
+      menuRange.getRow() <= row && row <= menuRange.getLastRow() &&
+      menuRange.getColumn() <= col && col <= menuRange.getLastColumn()
+    ) {
+      const value = range.getValue();
+      if (typeof value === 'string' && value.length > longTextLength) {
+        sheet.setRowHeight(row, longHeight);
+      } else {
+        sheet.setRowHeight(row, defaultHeight);
+      }
+
+      const selectedSubdivision = value;
+      if (!selectedSubdivision) {
+        sheet.getRange(PIB_AND_RANK_CELL).setValue("");
+        return;
+      }
+
+      const mvoSheet = e.source.getSheetByName(mvoSheetName);
+      if (!mvoSheet) {
+        sheet.getRange(PIB_AND_RANK_CELL).setValue("");
+        return;
+      }
+
+      const lastRowMVO = mvoSheet.getLastRow();
+      const subList = mvoSheet.getRange(2, 4, lastRowMVO - 1, 1).getValues().flat();
+      const rankList = mvoSheet.getRange(2, 2, lastRowMVO - 1, 1).getValues().flat();
+      const pibList = mvoSheet.getRange(2, 3, lastRowMVO - 1, 1).getValues().flat();
+      const idx = subList.findIndex(v => v === selectedSubdivision);
+
+      if (idx !== -1) {
+        const rank = rankList[idx] || "";
+        const pib = pibList[idx] || "";
+        const pibParts = pib.trim().split(" ");
+        let shortPib = pib;
+        if (pibParts.length >= 2) {
+          const lastName = pibParts[0];
+          const firstName = pibParts[1];
+          const firstInitial = firstName ? (firstName[0] + ".") : "";
+          shortPib = `${firstInitial} ${lastName}`;
+        }
+        const result = `${rank} ${shortPib}`.trim();
+        sheet.getRange(PIB_AND_RANK_CELL).setValue(result);
+      } else {
+        sheet.getRange(PIB_AND_RANK_CELL).setValue("");
+      }
+    }
+  }
 }
+
+
 
 function updateWordsFieldsDynamic() {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("А4219");
@@ -29,7 +150,6 @@ function updateWordsFieldsDynamic() {
     SpreadsheetApp.getUi().alert('Не знайдено рядок "Всього:"');
     return;
   }
-
   const totalQuantity = sheet.getRange("J" + summaryRow).getValue();
   const totalAmount = sheet.getRange("K" + summaryRow).getValue();
   const transferRow = findRowByText(sheet, "Всього передано");
@@ -139,4 +259,3 @@ function kopiykyWordsOnlyUa(number) {
   }
   return word.trim();
 }
-
