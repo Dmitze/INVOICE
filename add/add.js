@@ -6,15 +6,13 @@ function addProductRow() {
   }
   const START_ROW = 29;
   const END_ROW = 49;
-  const COLS = 12; // A-L
-
+  const COLS = 12; 
   let lastRow = START_ROW;
   for (let r = START_ROW; r <= END_ROW; r++) {
     const val = sheet.getRange(r, 2).getValue();
     if (val) lastRow = r;
     else break;
   }
-
   sheet.insertRowsAfter(lastRow, 1);
   const sourceRange = sheet.getRange(lastRow, 1, 1, COLS);
   const destRange = sheet.getRange(lastRow + 1, 1, 1, COLS);
