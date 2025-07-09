@@ -8,9 +8,9 @@ function onOpen() {
 }
 
 function onEdit(e) {
-  const sheetName = "А4219";
-  const dictSheetName = "Довідник";
-  const mvoSheetName = "МВО";
+  const sheetName = "";
+  const dictSheetName = "";
+  const mvoSheetName = "";
   const categoryColumn = 7; // G
   const itemColumn = 2;     // B
   const valueColumn = 9;    // I
