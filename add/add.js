@@ -1,7 +1,7 @@
 function addProductRow() {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("А4219");
   if (!sheet) {
-    SpreadsheetApp.getUi().alert('Лист "A4219" не знайдено! Перевірте назву листа.');
+    SpreadsheetApp.getUi().alert('Лист "" не знайдено! Перевірте назву листа.');
     return;
   }
   const START_ROW = 29;
