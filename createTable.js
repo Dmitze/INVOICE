@@ -1,11 +1,32 @@
 function createSnapshotSpreadsheet() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName("А4219");
-  const title1 = sheet.getRange("I11").getValue().toString().trim();
-  const title2 = sheet.getRange("I15:L15").getValues()[0].join(" ").trim();
-  const title3 = sheet.getRange("K49").getValue().toString().trim();
-  const title4 = sheet.getRange("D22:J22").getValues()[0].join(" ").trim();
-  const fullTitle = [title1, title2, title3, title4].filter(Boolean).join(" – ") || "Накладна";
+  const docNumber = sheet.getRange("I11").getValue().toString().trim();
+  const rawDate = sheet.getRange("I15").getValue();
+  let formattedDate = "";
+  if (rawDate instanceof Date) {
+    const day = String(rawDate.getDate()).padStart(2, '0');
+    const month = String(rawDate.getMonth() + 1).padStart(2, '0');
+    const year = rawDate.getFullYear();
+    formattedDate = `${day}.${month}.${year}`;
+  } else {
+    formattedDate = rawDate.toString().trim();
+  }
+
+  const subdivision = sheet.getRange("I24:L25").getValues().flat().filter(Boolean).join(" ").trim();
+  const rankPib = sheet.getRange("D22:J22").getValues()[0].filter(Boolean).join(" ").trim();
+  const totalQty = sheet.getRange("J49").getValue();
+  const totalSum = sheet.getRange("K49").getValue();
+
+  const titleParts = [
+    docNumber ? `Накладна №${docNumber}` : "",
+    formattedDate ? `від ${formattedDate}` : "",
+    subdivision ? `(${subdivision})` : "",
+    rankPib || "",
+    `кількість(${totalQty})`,
+    `сума(${totalSum} грн)`
+  ];
+  const fullTitle = titleParts.filter(Boolean).join(" ").trim() || "Накладна";
   const newSS = SpreadsheetApp.create(fullTitle);
   const newFileId = newSS.getId();
   const critOriginal = ss.getSheetByName("crit");
@@ -22,7 +43,6 @@ function createSnapshotSpreadsheet() {
   const lastRow = mainCopy.getLastRow();
   const lastCol = mainCopy.getLastColumn();
   mainCopy.getRange(1, 1, lastRow, lastCol).clearDataValidations();
-
   return {
     spreadsheet: newSS,
     fileId: newFileId,
@@ -89,10 +109,10 @@ function logExport(type, title, fileId) {
   const typeCell = logSheet.getRange(lastRow, 1);
   switch (type) {
     case "PDF":
-      typeCell.setBackground("#f89292"); // рожевий для PDF
+      typeCell.setBackground("#f89292"); 
       break;
     case "Excel":
-      typeCell.setBackground("#06f874"); // зелений для Excel
+      typeCell.setBackground("#06f874"); 
       break;
   }
 
