@@ -110,10 +110,10 @@ function logExport(type, title, fileId) {
   const typeCell = logSheet.getRange(lastRow, 1);
   switch (type) {
     case "PDF":
-      typeCell.setBackground("#f89292"); 
+      typeCell.setBackground("#f89292"); // рожевий для PDF
       break;
     case "Excel":
-      typeCell.setBackground("#06f874"); 
+      typeCell.setBackground("#06f874"); // зелений для Excel
       break;
   }
 
