@@ -74,6 +74,7 @@ function exportA4219ToPDF() {
       <p><a href="https://drive.google.com/file/d/${fileIdFinal}" target="_blank">📂 Відкрити документ</a></p>
     </div>`;
   SpreadsheetApp.getUi().showModalDialog(HtmlService.createHtmlOutput(summaryHtml), "Готово!");
+  registerDocumentInBook(fileId, title);
 }
 
 function exportA4219ToExcel() {
@@ -93,6 +94,7 @@ function exportA4219ToExcel() {
       <p><a href="https://drive.google.com/file/d/${fileId}" target="_blank">📂 Відкрити документ</a></p>
     </div>`;
   SpreadsheetApp.getUi().showModalDialog(HtmlService.createHtmlOutput(summaryHtml), "Готово!");
+  registerDocumentInBook(fileId, title);
 }
 
 function logExport(type, title, fileId) {
@@ -104,7 +106,6 @@ function logExport(type, title, fileId) {
   }
   const url = "https://drive.google.com/file/d/" + fileId;
   logSheet.appendRow([type, title, url, new Date()]);
-
   const lastRow = logSheet.getLastRow();
   const typeCell = logSheet.getRange(lastRow, 1);
   switch (type) {
@@ -128,4 +129,70 @@ function showLinkModal(type, title, fileId) {
       <p><a href="${url}" target="_blank" style="color:#3367d6;">📂 Відкрити документ</a></p>
     </div>`;
   SpreadsheetApp.getUi().showModalDialog(HtmlService.createHtmlOutput(html), "Експорт завершено");
+}
+
+function registerDocumentInBook(fileId, title) {
+  const sourceSS = SpreadsheetApp.getActiveSpreadsheet();
+  const sourceSheet = sourceSS.getSheetByName("А4219");
+
+  const directionValues = sourceSheet.getRange("C20:E20").getValues().flat();
+  const direction = directionValues.find(v => v === "Здача" || v === "Видача") || "";
+  if (!direction) return;
+
+  const targetSS = SpreadsheetApp.openById("1qUPg_Z2tY5xnou7_RkrADgdoYa0ku4v0I0socFetDKU");
+  const targetSheet = targetSS.getSheetByName(direction === "Здача" ? "ЗН" : "ВН");
+
+  const fileUrl = "https://drive.google.com/file/d/" + fileId;
+
+  // 🔍 Перевірка: чи такий лінк вже існує
+  const existingLinks = targetSheet.getRange("O4:O" + targetSheet.getLastRow()).getValues().flat();
+  if (existingLinks.includes(fileUrl)) {
+    SpreadsheetApp.getUi().alert(`ℹ️ Документ вже зареєстровано у книзі ${direction}.`);
+    return;
+  }
+
+  const docDate = sourceSheet.getRange("I15").getValue();
+  const day = String(docDate.getDate()).padStart(2, '0');
+  const month = String(docDate.getMonth() + 1).padStart(2, '0');
+  const year = docDate.getFullYear();
+  const formattedDate = `${day}.${month}.${year}`;
+  const docNumber = sourceSheet.getRange("I11").getValue().toString().trim();
+  const subdivision = sourceSheet.getRange("I24:L25").getValues().flat().filter(Boolean).join(" ").trim();
+  const rankPib = sourceSheet.getRange("D22:J22").getValues()[0].filter(Boolean).join(" ").trim();
+  const totalQty = sourceSheet.getRange("J49").getValue();
+  const g59Value = sourceSheet.getRange("G59").getValue();
+
+  const startRow = 4;
+  const dataRange = targetSheet.getRange(startRow, 2, targetSheet.getLastRow() - startRow + 1, 13).getValues();
+  let targetRow = startRow;
+  for (let i = 0; i < dataRange.length; i++) {
+    if (dataRange[i].every(cell => cell === "")) {
+      targetRow = startRow + i;
+      break;
+    }
+  }
+
+  // Основні дані для B–N
+  const rowValues = [
+    formattedDate,            // B
+    "Накладна",               // C
+    docNumber,                // D
+    formattedDate,            // E
+    rankPib,                  // F
+    subdivision,              // G
+    `Кількість: ${totalQty}`,// H
+    "", "", "", "", "", ""    // I–N
+  ];
+  targetSheet.getRange(targetRow, 2, 1, rowValues.length).setValues([rowValues]);
+
+  // 💾 Додаткові поля
+  targetSheet.getRange("F" + targetRow).setValue(2);               // F
+  targetSheet.getRange("G" + targetRow).setValue(1);               // G
+  targetSheet.getRange("H" + targetRow).setValue(g59Value);        // H
+  targetSheet.getRange("O" + targetRow).setValue(fileUrl);         // O
+
+  const allLinks = targetSheet.getRange("O4:O" + targetSheet.getLastRow()).getValues().flat();
+  const registeredCount = allLinks.filter(link => typeof link === "string" && link.startsWith("https://")).length;
+
+  SpreadsheetApp.getUi().alert(`✅ Записано в книзі ${direction}\n📌 Рядок №${targetRow}\n🔗 Посилання в O${targetRow}\n📊 Всього зареєстровано: ${registeredCount}`);
 }
