@@ -1,5 +1,5 @@
 function onEdit(e) {
-  const sheetName = "А4219";
+  const sheetName = "";
   const dictSheetName = "Довідник";
   const mvoSheetName = "МВО";
   const categoryColumn = 7;
@@ -125,7 +125,7 @@ function onEdit(e) {
 
 function fillPersonDataByUnit(unitName) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheetA = ss.getSheetByName("А4219");
+  const sheetA = ss.getSheetByName("");
   const sheetMVO = ss.getSheetByName("МВО");
   if (!unitName) {
     sheetA.getRange("A59").setValue("");
@@ -150,7 +150,7 @@ function fillPersonDataByUnit(unitName) {
   sheetA.getRange("G59").setValue(shortName);
 }
 function updateWordsFieldsDynamic() {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("А4219");
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("");
   if (!sheet) return;
   const summaryRow = findSummaryRow(sheet);
   if (!summaryRow) {
