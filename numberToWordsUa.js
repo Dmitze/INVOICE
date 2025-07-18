@@ -1,5 +1,5 @@
 function onEdit(e) {
-  const sheetName = "";
+  const sheetName = "А4219";
   const dictSheetName = "Довідник";
   const mvoSheetName = "МВО";
   const categoryColumn = 7;
@@ -8,7 +8,8 @@ function onEdit(e) {
   const firstRow = 29;
   const lastRow = 48;
   const contactEmail = "nrs.a4219@gmail.com";
-  const PIB_AND_RANK_CELL = "G59";
+  const RANK_CELL = "A48";
+  const FULLNAME_CELL = "G48";
 
   if (!e || !e.range || e.range.getSheet().getName() !== sheetName) return;
 
@@ -16,6 +17,7 @@ function onEdit(e) {
   const row = e.range.getRow();
   const col = e.range.getColumn();
 
+  // Проверка количества по справочнику
   if (row >= firstRow && row <= lastRow && col === valueColumn) {
     const itemName = sheet.getRange(row, itemColumn).getValue();
     const category = sheet.getRange(row, categoryColumn).getValue();
@@ -62,14 +64,12 @@ function onEdit(e) {
     }
   }
 
-  // 📊 Автоматичне оновлення словесних значень
   if (col === 8 || col === 11) {
     if (typeof updateWordsFieldsDynamic === "function") {
       updateWordsFieldsDynamic();
     }
   }
 
-  // 🧩 Адаптація висоти рядка для підрозділу
   const targetRange = sheet.getRange("I24:L25");
   if (
     targetRange.getRow() <= row && row <= targetRange.getLastRow() &&
@@ -83,74 +83,55 @@ function onEdit(e) {
     // ⚙️ Пошук ПІБ та звань
     const selectedSubdivision = cellText;
     if (!selectedSubdivision) {
-      sheet.getRange(PIB_AND_RANK_CELL).setValue("");
+      sheet.getRange(RANK_CELL).setValue("");
+      sheet.getRange(FULLNAME_CELL).setValue("");
       return;
     }
 
-    const mvoSheet = e.source.getSheetByName(mvoSheetName);
-    if (!mvoSheet) {
-      sheet.getRange(PIB_AND_RANK_CELL).setValue("");
-      return;
-    }
-
-    const lastRowMVO = mvoSheet.getLastRow();
-    const subList = mvoSheet.getRange(2, 4, lastRowMVO - 1, 1).getValues().flat();
-    const rankList = mvoSheet.getRange(2, 2, lastRowMVO - 1, 1).getValues().flat();
-    const pibList = mvoSheet.getRange(2, 3, lastRowMVO - 1, 1).getValues().flat();
-    const idx = subList.findIndex(v => v === selectedSubdivision);
-
-    if (idx !== -1) {
-      const rank = rankList[idx] || "";
-      const pib = pibList[idx] || "";
-      const pibParts = pib.trim().split(" ");
-      let shortPib = pib;
-      if (pibParts.length >= 2) {
-        shortPib = `${pibParts[1][0]}. ${pibParts[0]}`;
-      }
-      sheet.getRange(PIB_AND_RANK_CELL).setValue(`${rank} ${shortPib}`.trim());
-    } else {
-      sheet.getRange(PIB_AND_RANK_CELL).setValue("");
-    }
+    fillPersonDataByUnit(selectedSubdivision, sheetName);
   }
 
-  // 🧭 Пошук особового складу вручну
   if (row >= 24 && row <= 25 && col >= 9 && col <= 12) {
     const selectedUnit = e.range.getValue().trim();
-    if (typeof fillPersonDataByUnit === "function") {
-      fillPersonDataByUnit(selectedUnit);
-    }
+    fillPersonDataByUnit(selectedUnit, sheetName);
   }
 }
 
-
-function fillPersonDataByUnit(unitName) {
+function fillPersonDataByUnit(unitName, sheetName) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheetA = ss.getSheetByName("");
+  const sheetA = ss.getSheetByName(sheetName);
   const sheetMVO = ss.getSheetByName("МВО");
-  if (!unitName) {
-    sheetA.getRange("A59").setValue("");
-    sheetA.getRange("C59").setValue("");
-    sheetA.getRange("G59").setValue("");
+  const RANK_CELL = "A48";
+  const FULLNAME_CELL = "G48";
+  if (!unitName || !sheetA || !sheetMVO) {
+    if(sheetA) {
+      sheetA.getRange(RANK_CELL).setValue("");
+      sheetA.getRange(FULLNAME_CELL).setValue("");
+    }
     return;
   }
-  const mvoData = sheetMVO.getRange("C2:E" + sheetMVO.getLastRow()).getValues();
-  const match = mvoData.find(row => row[2].trim() === unitName.trim());
+  const mvoData = sheetMVO.getRange(2, 3, sheetMVO.getLastRow() - 1, 3).getValues(); // [rank, fullName, subdivision]
+  const match = mvoData.find(row => String(row[2]).trim() === unitName.trim());
   if (!match) {
-    sheetA.getRange("A59").setValue("");
-    sheetA.getRange("C59").setValue("");
-    sheetA.getRange("G59").setValue("");
+    sheetA.getRange(RANK_CELL).setValue("");
+    sheetA.getRange(FULLNAME_CELL).setValue("");
     return;
   }
-  const rank = match[0];
-  const fullName = match[1];
+  const rank = match[0] || "";
+  const fullName = match[1] || "";
+  // Фамилия Имя Отчество → Имя Фамилия
   const parts = fullName.trim().split(" ");
-  const shortName = (parts.length >= 2) ? `${parts[1][0]}. ${parts[0]}` : fullName;
-  sheetA.getRange("A59").setValue(rank);
-  sheetA.getRange("C59").setValue(unitName);
-  sheetA.getRange("G59").setValue(shortName);
+  let nameSurname = fullName;
+  if (parts.length >= 2) {
+    nameSurname = `${parts[1]} ${parts[0]}`; // Имя Фамилия
+  }
+  sheetA.getRange(RANK_CELL).setValue(rank);
+  sheetA.getRange(FULLNAME_CELL).setValue(nameSurname);
 }
+
+
 function updateWordsFieldsDynamic() {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("");
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("А4219");
   if (!sheet) return;
   const summaryRow = findSummaryRow(sheet);
   if (!summaryRow) {
