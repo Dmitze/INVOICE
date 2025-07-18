@@ -1,6 +1,6 @@
 function createSnapshotSpreadsheet() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName("А4219");
+  const sheet = ss.getSheetByName("");
   const docNumber = sheet.getRange("I11").getValue().toString().trim();
   const rawDate = sheet.getRange("I15").getValue();
   let formattedDate = "";
@@ -34,9 +34,9 @@ function createSnapshotSpreadsheet() {
   critCopy.setName("crit");
   critCopy.hideSheet();
   SpreadsheetApp.flush();
-  const mainOriginal = ss.getSheetByName("А4219");
+  const mainOriginal = ss.getSheetByName("");
   const mainCopy = mainOriginal.copyTo(newSS);
-  mainCopy.setName("А4219");
+  mainCopy.setName("");
   SpreadsheetApp.flush();
   const defaultSheet = newSS.getSheets()[0];
   newSS.deleteSheet(defaultSheet);
@@ -52,7 +52,7 @@ function createSnapshotSpreadsheet() {
 
 function exportA4219ToPDF() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName("А4219");
+  const sheet = ss.getSheetByName("");
   const { fileId, title } = createSnapshotSpreadsheet();
   const pdfUrl = `https://docs.google.com/spreadsheets/d/${fileId}/export?format=pdf&portrait=false&fitw=true&sheetnames=false&printtitle=false&pagenumbers=false&gridlines=false&fzr=false`;
   const token = ScriptApp.getOAuthToken();
@@ -79,7 +79,7 @@ function exportA4219ToPDF() {
 
 function exportA4219ToExcel() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName("А4219");
+  const sheet = ss.getSheetByName("");
   const { fileId, title } = createSnapshotSpreadsheet();
   const excelFile = DriveApp.getFileById(fileId);
   excelFile.setName(`${title}.xlsx`);
@@ -133,7 +133,7 @@ function showLinkModal(type, title, fileId) {
 
 function registerDocumentInBook(fileId, title) {
   const sourceSS = SpreadsheetApp.getActiveSpreadsheet();
-  const sourceSheet = sourceSS.getSheetByName("А4219");
+  const sourceSheet = sourceSS.getSheetByName("");
 
   const directionValues = sourceSheet.getRange("C20:E20").getValues().flat();
   const direction = directionValues.find(v => v === "Здача" || v === "Видача") || "";
