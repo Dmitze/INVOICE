@@ -1,7 +1,7 @@
 function addProductRow() {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("А4219");
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("");
   if (!sheet) {
-    SpreadsheetApp.getUi().alert('Лист "A4219" не знайдено! Перевірте назву листа.');
+    SpreadsheetApp.getUi().alert('Лист "" не знайдено! Перевірте назву листа.');
     return;
   }
   const START_ROW = 29;
@@ -26,7 +26,7 @@ function addProductRow() {
 }
 
 function deleteProductRow() {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("А4219");
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("");
   const START_ROW = 29;
   const COL = 2;
   let lastProductRow = START_ROW;
