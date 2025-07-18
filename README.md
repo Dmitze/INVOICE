@@ -98,13 +98,12 @@ INVOICE/
 ## Контакт
 
 З питань по роботі або пропозицій:  
-
+- Мій профіль: https://github.com/Dmitze  
 ---
 
 ## Проєкт та📄 Ліцензія
 
 - Репозиторій: https://github.com/Dmitze/INVOICE  
-- Мій профіль: https://github.com/Dmitze  
 - Ліцензія MIT: https://github.com/Dmitze/INVOICE/blob/main/LICENSE  
 
 ---
