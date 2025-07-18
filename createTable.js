@@ -1,6 +1,6 @@
 function createSnapshotSpreadsheet() {
   const ss    = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName("А4219");
+  const sheet = ss.getSheetByName("");
   const docNumberRaw = sheet.getRange("I11").getValue().toString().trim();
   const docNumber    = docNumberRaw ? `№${docNumberRaw}` : "";
 
@@ -49,17 +49,12 @@ function createSnapshotSpreadsheet() {
     .hideSheet();
   SpreadsheetApp.flush();
 
-  // копіюємо А4219
-  ss.getSheetByName("А4219")
+  ss.getSheetByName("")
     .copyTo(newSS)
-    .setName("А4219");
+    .setName("");
   SpreadsheetApp.flush();
-
-  // видаляємо порожній лист
   newSS.deleteSheet(newSS.getSheets()[0]);
-
-  // знімаємо валідації
-  const mainCopy = newSS.getSheetByName("А4219");
+  const mainCopy = newSS.getSheetByName("");
   const lr = mainCopy.getLastRow();
   const lc = mainCopy.getLastColumn();
   mainCopy.getRange(1, 1, lr, lc).clearDataValidations();
@@ -74,7 +69,7 @@ function createSnapshotSpreadsheet() {
 
 function exportA4219ToPDF() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName("А4219");
+  const sheet = ss.getSheetByName("");
   const { fileId, title, totalQty, totalSum } = createSnapshotSpreadsheet();
 
   const pdfUrl = `https://docs.google.com/spreadsheets/d/${fileId}`
@@ -108,7 +103,7 @@ function exportA4219ToPDF() {
 
 function exportA4219ToExcel() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName("А4219");
+  const sheet = ss.getSheetByName("");
   const { fileId, title, totalQty, totalSum } = createSnapshotSpreadsheet();
   const excelFile = DriveApp.getFileById(fileId);
   excelFile.setName(`${title}.xlsx`);
@@ -165,7 +160,7 @@ function showLinkModal(type, title, fileId) {
 
 function registerDocumentInBook(fileId, title) {
   const sourceSS = SpreadsheetApp.getActiveSpreadsheet();
-  const sourceSheet = sourceSS.getSheetByName("А4219");
+  const sourceSheet = sourceSS.getSheetByName("");
 
   const directionValues = sourceSheet.getRange("C20:E20").getValues().flat();
   const direction = directionValues.find(v => v === "Здача" || v === "Видача") || "";
