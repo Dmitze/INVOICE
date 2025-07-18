@@ -1,5 +1,5 @@
 function onEdit(e) {
-  const sheetName = "А4219";
+  const sheetName = "";
   const dictSheetName = "Довідник";
   const mvoSheetName = "МВО";
   const categoryColumn = 7;
@@ -7,7 +7,7 @@ function onEdit(e) {
   const valueColumn = 9;
   const firstRow = 29;
   const lastRow = 48;
-  const contactEmail = "nrs.a4219@gmail.com";
+  const contactEmail = "nrs.a@gmail.com";
   const RANK_CELL = "A48";
   const FULLNAME_CELL = "G48";
 
@@ -131,7 +131,7 @@ function fillPersonDataByUnit(unitName, sheetName) {
 
 
 function updateWordsFieldsDynamic() {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("А4219");
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("");
   if (!sheet) return;
   const summaryRow = findSummaryRow(sheet);
   if (!summaryRow) {
